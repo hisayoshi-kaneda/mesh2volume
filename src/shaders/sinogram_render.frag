@@ -16,9 +16,9 @@ void main() {
     vec3 N = normalize(f_normalCameraSpace);
 
     float inner = dot(V, N);
-    if(inner > EPS) {
+    if(inner > 0) {
         out_color = vec4(-color,1.0);
-    } else if (inner < -EPS) {
+    } else {
         out_color = vec4(color, 1.0);
     }
 }

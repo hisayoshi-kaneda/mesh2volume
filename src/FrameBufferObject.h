@@ -9,7 +9,7 @@
 class FrameBufferObject {
 public:
     GLuint fboId = 0;
-    GLuint renderBufferId = 0;
+    GLuint depthBufferId = 0;
     vector<GLuint> textureBufferIds;
     vector<GLuint> colorAttachmentIds;
     int width;
@@ -25,8 +25,8 @@ public:
                 glDeleteTextures(1, &tbId);
             }
         }
-        if (renderBufferId != 0) {
-            glDeleteRenderbuffers(1, &renderBufferId);
+        if (depthBufferId != 0) {
+            glDeleteTextures(1, &depthBufferId);
         }
         if (fboId != 0) {
             glDeleteFramebuffers(1, &fboId);
@@ -49,11 +49,8 @@ public:
         const int colorAttachmentId = (int)colorAttachmentIds.size();
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + colorAttachmentId, GL_TEXTURE_2D, textureBufferId, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferId);
         colorAttachmentIds.push_back(GL_COLOR_ATTACHMENT0 + colorAttachmentId);
-
-        //Release frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		release();
     }
 
     void bind() {
@@ -64,17 +61,17 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void bindTexture(GLuint textureId) {
-        Assertion(textureId >= 0 && textureId < (int)textureBufferIds.size(), "TextureId is out of bounds");
-        glBindTexture(GL_TEXTURE_2D, textureBufferIds[textureId]);
+    void bindTexture(int textureIndex) {
+        Assertion(textureIndex >= 0 && textureIndex < (int)textureBufferIds.size(), "TextureId is out of bounds");
+        glBindTexture(GL_TEXTURE_2D, textureBufferIds[textureIndex]);
     }
 
     void releaseTexture() {
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-    void setRenderTarget(int colorAttachmentId) {
-        glDrawBuffers(1, (const GLenum *)&colorAttachmentIds[colorAttachmentId]);
+    void setRenderTarget(int size , GLenum *bufs) {
+		glDrawBuffers(size, bufs);
     }
 
     void setRenderTarget() {
@@ -83,7 +80,8 @@ public:
 
 private:
     void initialize() {
-        //Generate texture buffer
+		glActiveTexture(GL_TEXTURE0);
+		//Generate texture buffer
         GLuint textureBufferId;
         glGenTextures(1, &textureBufferId);
         glBindTexture(GL_TEXTURE_2D, textureBufferId);
@@ -92,20 +90,25 @@ private:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        //glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
         textureBufferIds.push_back(textureBufferId);
 
-        //Generate render buffer
-        glGenRenderbuffers(1, &renderBufferId);
-        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferId);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        //Generate depth buffer
+		glGenTextures(1, &depthBufferId);
+		glBindTexture(GL_TEXTURE_2D, depthBufferId);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
         //Generate frame buffer
         glGenFramebuffers(1, &fboId);
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureBufferId, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferId);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthBufferId, 0);
         colorAttachmentIds.push_back(GL_COLOR_ATTACHMENT0);
 
         //Release frame buffer

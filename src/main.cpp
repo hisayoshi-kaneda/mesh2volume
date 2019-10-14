@@ -16,8 +16,8 @@ int main(int argc, char **argv) {
         fprintf(stdout, "[ INFO ] input file: %s\n", argv[1]);
         filename = string(argv[1]);
     }
-    filename = "data/bunny.obj";
-    //filename = "data/lattice-sample2.stl";
+    //filename = "data/bunny.obj";
+    filename = "data/lattice-sample2.stl";
     //filename = "data/bunny_watertight.obj";
     TriMeshLoader loader;
     TriMesh mesh = loader.load(filename);
