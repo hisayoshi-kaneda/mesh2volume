@@ -20,13 +20,19 @@ private:
 	string sinogram_frag_file = "src/shaders/sinogram_render.frag";
 	string texture_vert_file = "src/shaders/texture_render.vert";
 	string texture_frag_file = "src/shaders/texture_render.frag";
+	Texture2D textureBuffer;
+	Texture2D depthBuffer;
 
 
 public:
 	SinogramViewer(int width, int height, TriMesh* mesh)
 		: Window(width, height, "SinogramViewer"),
 		fbo(width, height),
-		mesh(mesh) {
+		mesh(mesh),
+		textureBuffer(width, height,GL_RGB32F,GL_RGBA),
+		depthBuffer(width,height,GL_DEPTH_COMPONENT,GL_DEPTH_COMPONENT){
+		fbo.attachColorTexture(textureBuffer);
+		fbo.attachDepthTexture(depthBuffer);
 		initialize();
 	}
 
@@ -82,7 +88,7 @@ public:
 		// �E�B���h�E�ւ̕`��
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		texture_shader.bind();
-		glBindTexture(GL_TEXTURE_2D, fbo.textureBufferIds[0]);
+		glBindTexture(GL_TEXTURE_2D, textureBuffer.textureId);
 
 		glUniform1i(glGetUniformLocation(texture_shader.program_id, "texImage"), 0);
 

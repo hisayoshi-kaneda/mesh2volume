@@ -1,6 +1,7 @@
 ﻿#include "MeshViewer.h"
-#include "SinogramGenerator.h"
-#include "SinogramViewer.h"
+#include "Mesh2Volume.h"
+#include "Volume.h"
+#include "VolumeViewer.h"
 #include "Window.h"
 #include "common.h"
 
@@ -18,12 +19,13 @@ int main(int argc, char **argv) {
     }
     //filename = "data/bunny.obj";
     filename = "data/lattice-sample2.stl";
+    //filename = "data/lattice-sample.obj";
     //filename = "data/bunny_watertight.obj";
     TriMeshLoader loader;
     TriMesh mesh = loader.load(filename);
-    MeshViewer viewer(WINSIZE_WIDTH, WINSIZE_HEIGHT, &mesh);
-    //SinogramViewer viewer(WINSIZE_WIDTH, WINSIZE_HEIGHT, &mesh);
-    viewer.main_loop();
-    //SinogramGenerator sg(WINSIZE_WIDTH, WINSIZE_HEIGHT, &mesh);
-    //sg.generate(1000);
+    Mesh2Volume m2v(500,500,500,60.0f/500.0f, &mesh);
+	m2v.main_loop();
+	Volume volume = m2v.generateVolume();
+	string tmp = "meshvolume";
+	volume.write(tmp);
 }
