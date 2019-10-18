@@ -11,7 +11,10 @@ uniform sampler2D depthBack;
 
 void main(void) {
 	vec3 temp = (f_coordinate.xyz / f_coordinate.w + 1.0) / 2.0;
-	if(texture(depthFront,temp.xy).r < gl_FragCoord.z && gl_FragCoord.z < texture(depthBack,temp.xy).r){
+	float depthf = texture(depthFront,temp.xy).r;
+	float depthb = texture(depthBack,temp.xy).r;
+	if(1.0 - EPS < depthb) discard;
+	if(depthf <= gl_FragCoord.z && gl_FragCoord.z <= depthb){
 		out_color = vec4(1.0);
 	}
 	else{

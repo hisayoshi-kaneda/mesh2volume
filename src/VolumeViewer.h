@@ -39,9 +39,9 @@ public:
 
 		// カメラの初期化
 		projMat = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.0f);
-		viewMat = glm::lookAt(glm::vec3(-200.0f, 0.0f, 0.0f),  // 視点の位置
+		viewMat = glm::lookAt(glm::vec3(0.0f, 0.0f, 50.0f),  // 視点の位置
 			glm::vec3(0.0f, 0.0f, 0.0f),  // 見ている先
-			glm::vec3(0.0f, 0.0f, 1.0f)); // 視界の上方向
+			glm::vec3(0.0f, 1.0f, 0.0f)); // 視界の上方向
 
 		//その他の行列の初期化
 		modelMat = glm::mat4(1.0);
@@ -49,7 +49,6 @@ public:
 
     void draw() override {
         glm::vec3 volume_size = glm::vec3(volume->size[0], volume->size[1], volume->size[2]);
-		float max_transLen = volume->resolution * glm::length(volume_size);
 		//バインド
         volume_shader.bind();
         vao.bind();
@@ -62,8 +61,6 @@ public:
         volume_shader.set_uniform_value(volume_size, "u_volumeSize");
         volume_shader.set_uniform_value(volume->resolution, "u_volumeResolution");
         volume_shader.set_uniform_value(volume->threshold, "u_threshold");
-
-        texture.bind();
         volume_shader.set_uniform_texture(texture, "u_volumeTexture");
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -76,7 +73,6 @@ public:
 
 	void main_loop() override {
 		while (!glfwWindowShouldClose(window)) {
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			draw();
 			flush();
 		}

@@ -45,13 +45,13 @@ public:
 		: Window(sizeX, sizeY, "MeshViewer"),
 		fbo(sizeX, sizeY),
 		mesh(mesh),
-		depthBuffer(sizeX, sizeY, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT),
-		size{ sizeX, sizeY, sizeZ }{
+		depthBuffer(sizeX, sizeY, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT),
+		size{ sizeX, sizeY, sizeZ },
+		resolution(resolution){
 		for (int i = 0; i < layerN + 1; i++) {
 			GLenum textureUnit = GL_TEXTURE0 + (i & 1);
 			colorImages.push_back(make_shared<Texture2D>(sizeX, sizeY, GL_RGB32F, GL_RGBA));
-			LayeredDepthImages.push_back(make_shared<Texture2D>(sizeX, sizeY, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, textureUnit));
-			//dump(LayeredDepthImages[i]->textureId, LayeredDepthImages[i]->textureUnit);
+			LayeredDepthImages.push_back(make_shared<Texture2D>(sizeX, sizeY, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, textureUnit));
 		}
 		initialize();
 	}
@@ -67,18 +67,17 @@ public:
 		volumeGen_shader.create(volumeGen_vert_file, volumeGen_frag_file);
 		mesh->computeGravity();
 		center = mesh->gravity;
-
 		projMat = glm::ortho(-size[0] * resolution / 2.0f, size[0] * resolution / 2.0f, -size[1] * resolution / 2.0f, size[1] * resolution / 2.0f, 0.1f, 1000.0f);
+		//projMat = glm::perspective(glm::radians(5.0f), (float)width / (float)height, 0.1f, 1000.0f);
 
-		viewMat = glm::lookAt(center + glm::vec3(0.0f, 0.0f, 500.0f), center, glm::vec3(0.0f, 1.0f, 0.0f));
+		viewMat = glm::lookAt(center + glm::vec3(0.0f, 0.0f, 100.0f), center, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	void draw() override {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		texture_shader.bind();
 
-		colorImages[0]->bind();
-		glUniform1i(glGetUniformLocation(texture_shader.program_id, "texImage"), 0);
+		texture_shader.set_uniform_texture(*colorImages[0], "texImage");
 
 		vao.bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -90,7 +89,7 @@ public:
 	void main_loop() override {
 		while (!glfwWindowShouldClose(window)) {
 			generateLDI();
-			generateVolume();
+			//generateVolume();
 			//draw();
 			flush();
 		}
@@ -112,12 +111,14 @@ public:
 
 		depthPeeling_shader.bind();
 		{
-			const glm::mat4 normMat = glm::inverse(glm::transpose(mvMat()));
+			glm::mat4 normMat = glm::inverse(glm::transpose(mvMat()));
+			normMat = mvMat();
 			for (int i = 1; i <= layerN; i++) {
 				fbo.attachColorTexture(*colorImages[i]);
 				fbo.attachDepthTexture(*LayeredDepthImages[i]);
 				depthPeeling_shader.set_uniform_value(normMat, "u_normMat");
 				depthPeeling_shader.set_uniform_value(mvpMat(), "u_mvpMat");
+				depthPeeling_shader.set_uniform_value(!(i & 1), "is_front");
 				depthPeeling_shader.set_uniform_texture(*LayeredDepthImages[i - 1], "texImage");
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				glDrawElements(GL_TRIANGLES, mesh->verIndices.size(), GL_UNSIGNED_INT, 0);
@@ -147,7 +148,6 @@ public:
 		volumeGen_shader.bind();
 		for (int z = 0; z < size[2]; z++) {
 			float coordZ = orgZ + z * resolution;
-			coordZ = 0;
 			glClear(GL_COLOR_BUFFER_BIT);
 			for (int i = 0; i < layerN; i += 2) {
 				glClear(GL_DEPTH_BUFFER_BIT);
@@ -161,7 +161,6 @@ public:
 			}
 			glReadBuffer(GL_COLOR_ATTACHMENT0);
 			glReadPixels(0, 0, size[0], size[1], GL_RED, GL_FLOAT, &volume.data[volume.size[0] * volume.size[1] * z]);
-			break;
 		}
 		volumeGen_shader.release();
 

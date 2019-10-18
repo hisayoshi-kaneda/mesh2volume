@@ -66,10 +66,10 @@ public:
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			// Uniform�ϐ��̓]��
-			const glm::mat4 normMat = glm::inverse(glm::transpose(mvMat()));
+			//const glm::mat4 normMat = glm::inverse(glm::transpose(mvMat()));
 			sinogram_shader.set_uniform_value(mvpMat(), "u_mvpMat");
 			sinogram_shader.set_uniform_value(mvMat(), "u_mvMat");
-			sinogram_shader.set_uniform_value(normMat, "u_normMat");
+			sinogram_shader.set_uniform_value(mvMat(), "u_normMat");
 
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);

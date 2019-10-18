@@ -18,7 +18,8 @@ public:
 		glBindTexture(GL_TEXTURE_3D, 0);
 	}
 
-	Texture3D(Volume& volume) {
+	Texture3D(Volume& volume, GLenum textureUnit = GL_TEXTURE0)
+		:textureUnit(textureUnit) {
 		initialize();
 		glTexImage3D(GL_TEXTURE_3D, 0, GL_R16F, volume.size[0], volume.size[1], volume.size[2], 0, GL_RED, GL_FLOAT, &volume.data[0]);
 		glBindTexture(GL_TEXTURE_3D, 0);
@@ -46,12 +47,12 @@ public:
 
 	void bind() {
 		glActiveTexture(textureUnit);
-		glBindTexture(GL_TEXTURE_2D, textureId);
+		glBindTexture(GL_TEXTURE_3D, textureId);
 	}
 
 	void release() {
 		glActiveTexture(textureUnit);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_3D, 0);
 	}
 };
 
