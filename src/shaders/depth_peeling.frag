@@ -17,6 +17,5 @@ void main() {
 	if(gl_FragCoord.z <= depth) discard;
 	if(f_normalCameraSpace.z > 0 && is_front)out_color = vec4(0.5);
 	else if(f_normalCameraSpace.z < 0 && !is_front)out_color = vec4(1.0);
-	else if(-EPS < f_normalCameraSpace.z && f_normalCameraSpace.z < EPS)out_color = vec4(0.8);
 	else discard;
 }

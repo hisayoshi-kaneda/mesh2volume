@@ -67,10 +67,10 @@ public:
 		volumeGen_shader.create(volumeGen_vert_file, volumeGen_frag_file);
 		mesh->computeGravity();
 		center = mesh->gravity;
-		projMat = glm::ortho(-size[0] * resolution / 2.0f, size[0] * resolution / 2.0f, -size[1] * resolution / 2.0f, size[1] * resolution / 2.0f, 0.1f, 1000.0f);
+		projMat = glm::ortho(-size[0] * resolution / 2.0f, size[0] * resolution / 2.0f, -size[1] * resolution / 2.0f, size[1] * resolution / 2.0f, 0.1f, 150.0f);
 		//projMat = glm::perspective(glm::radians(5.0f), (float)width / (float)height, 0.1f, 1000.0f);
 
-		viewMat = glm::lookAt(center + glm::vec3(0.0f, 0.0f, 100.0f), center, glm::vec3(0.0f, 1.0f, 0.0f));
+		viewMat = glm::lookAt(center + glm::vec3(0.0f, 0.0f, 75.0f), center, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	void draw() override {

@@ -18,17 +18,17 @@ int main(int argc, char **argv) {
         filename = string(argv[1]);
     }
     //filename = "data/bunny.obj";
-    filename = "data/lattice-sample2.stl";
-    //filename = "data/lattice-sample.obj";
-    //filename = "data/bunny_watertight.obj";
+    //filename = "data/lattice-sample2.stl";
+    filename = "data/lattice_fine.stl";
+    //filename = "data/bunny_watertight.stl";
     TriMeshLoader loader;
     TriMesh mesh = loader.load(filename);
-    Mesh2Volume m2v(500,500,500,12.0f/500.0f, &mesh);
+    Mesh2Volume m2v(800,800,800,10.0f/700.0f, &mesh);
 	//m2v.main_loop();
 	Volume volume = m2v.generateVolume();
 	m2v.~Mesh2Volume();
 	VolumeViewer viewer(WINSIZE_WIDTH, WINSIZE_HEIGHT, &volume);
 	viewer.main_loop();
-	//string tmp = "meshvolume";
-	//volume.write(tmp);
+	string tmp = "lattice";
+	volume.write(tmp);
 }
