@@ -4,6 +4,7 @@
 #define SHADER_H
 
 #include "Texture2D.h"
+#include "Texture2DArray.h"
 #include "Texture3D.h"
 #include "common.h"
 
@@ -100,25 +101,29 @@ public:
         glUniform3fv(loc_id, 1, glm::value_ptr(val));
     }
 
-	void set_uniform_value(glm::vec2 val, const char* val_name) {
-		GLuint loc_id = glGetUniformLocation(program_id, val_name);
-		glUniform2fv(loc_id, 1, glm::value_ptr(val));
-	}
+    void set_uniform_value(glm::vec2 val, const char *val_name) {
+        GLuint loc_id = glGetUniformLocation(program_id, val_name);
+        glUniform2fv(loc_id, 1, glm::value_ptr(val));
+    }
 
     void set_uniform_value(float val, const char *val_name) {
         GLuint loc_id = glGetUniformLocation(program_id, val_name);
         glUniform1f(loc_id, val);
     }
 
-	void set_uniform_texture(Texture2D& texture, const char* val_name) {
-		texture.bind();
-		glUniform1i(glGetUniformLocation(program_id, val_name), texture.textureUnit - GL_TEXTURE0);
-	}
+    void set_uniform_texture(Texture2D &texture, const char *val_name) {
+        texture.bind();
+        glUniform1i(glGetUniformLocation(program_id, val_name), texture.textureUnit - GL_TEXTURE0);
+    }
+    void set_uniform_texture(Texture2DArray &textureArray, const char *val_name) {
+        textureArray.bind();
+        glUniform1i(glGetUniformLocation(program_id, val_name), textureArray.textureArrayUnit - GL_TEXTURE0);
+    }
 
-	void set_uniform_texture(Texture3D& texture, const char* val_name) {
-		texture.bind();
-		glUniform1i(glGetUniformLocation(program_id, val_name), texture.textureUnit - GL_TEXTURE0);
-	}
+    void set_uniform_texture(Texture3D &texture, const char *val_name) {
+        texture.bind();
+        glUniform1i(glGetUniformLocation(program_id, val_name), texture.textureUnit - GL_TEXTURE0);
+    }
 
     void bind() {
         glUseProgram(program_id);

@@ -4,6 +4,7 @@
 #define FBO_H
 
 #include "Texture2D.h"
+#include "Texture2DArray.h"
 #include "common.h"
 
 class FrameBufferObject {
@@ -22,16 +23,25 @@ public:
         }
     }
 
-	void attachColorTexture(Texture2D& tex) {
-		glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.textureId, 0);
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
+    void attachColorTexture(Texture2D &tex) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex.textureId, 0);
+        //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
-	void attachDepthTexture(Texture2D& tex) {
-		glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.textureId, 0);
-	}
+    void attachColorTexture(Texture2DArray &texArray, const GLint layer) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texArray.textureArrayId, 0, layer);
+    }
+
+    void attachDepthTexture(Texture2D &tex) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.textureId, 0);
+    }
+    void attachDepthTexture(Texture2DArray &texArray, const GLint layer) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texArray.textureArrayId, 0, layer);
+    }
 
     void bind() {
         glBindFramebuffer(GL_FRAMEBUFFER, fboId);
@@ -43,7 +53,7 @@ public:
 
 private:
     void initialize() {
-		glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
 
         //Generate frame buffer
         glGenFramebuffers(1, &fboId);
