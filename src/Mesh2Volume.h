@@ -13,6 +13,7 @@
 #include "Volume.h"
 #include "Window.h"
 #include "common.h"
+#include "Timer.h"
 
 class Mesh2Volume : public Window {
 private:
@@ -93,12 +94,10 @@ public:
 
         depthPeeling_shader.bind();
         {
-            glm::mat4 normMat = glm::inverse(glm::transpose(mvMat()));
-            normMat = mvMat();
             for (int i = 1; i < layerN; i++) {
                 fbo.attachColorTexture(colorImages, i);
                 fbo.attachDepthTexture(LayeredDepthImages, i);
-                depthPeeling_shader.set_uniform_value(normMat, "u_normMat");
+                depthPeeling_shader.set_uniform_value(mvMat(), "u_mvMat");
                 depthPeeling_shader.set_uniform_value(mvpMat(), "u_mvpMat");
                 depthPeeling_shader.set_uniform_value(!(i & 1), "is_front");
                 depthPeeling_shader.set_uniform_value(i - 1, "layer");
@@ -114,6 +113,9 @@ public:
     }
 
     Volume generateVolume() {
+		Timer timer;
+		timer.start();
+
         Volume volume((int)size[0], (int)size[1], (int)size[2], resolution, 0.5f);
         generateLDI();
 
@@ -124,7 +126,6 @@ public:
         Texture2D depthBuffer(size[0], size[1], GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT);
         fbo.attachColorTexture(colorBuffer);
         fbo.attachDepthTexture(depthBuffer);
-        float coordZ = 0 * resolution;
 
         glm::mat4 mvpMat_ = mvpMat();
 
@@ -141,7 +142,7 @@ public:
             volumeGen_shader.set_uniform_value(coordZ, "coordZ");
             volumeGen_shader.set_uniform_value(layerN, "layerN");
             volumeGen_shader.set_uniform_texture(LayeredDepthImages, "LayeredDepthImages");
-            glDrawElements(GL_TRIANGLES, mesh->verIndices.size(), GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
             glReadBuffer(GL_COLOR_ATTACHMENT0);
             glReadPixels(0, 0, size[0], size[1], GL_RED, GL_FLOAT, &volume.data[volume.size[0] * volume.size[1] * z]);
         }
@@ -149,6 +150,8 @@ public:
 
         vao.release();
         fbo.release();
+
+		cout << "Generating volume took " << timer.stop() << " sec" << endl;
 
         return volume;
     }

@@ -13,8 +13,7 @@ uniform bool is_front;
 uniform int layer;
 
 void main() {
-	vec2 temp = (f_coordinate.xy / f_coordinate.w + 1.0) / 2.0;
-	float depth = texture(texImage, vec3(temp.xy, layer)).r;
+	float depth = texelFetch(texImage, ivec3(gl_FragCoord.xy, layer),0).r;
 	if(gl_FragCoord.z <= depth) discard;
 	if(f_normalCameraSpace.z > 0 && is_front)out_color = vec4(0.5);
 	else if(f_normalCameraSpace.z < 0 && !is_front)out_color = vec4(1.0);
