@@ -110,6 +110,11 @@ public:
         GLuint loc_id = glGetUniformLocation(program_id, val_name);
         glUniform1f(loc_id, val);
     }
+	
+	void set_uniform_value(int val, const char *val_name) {
+        GLuint loc_id = glGetUniformLocation(program_id, val_name);
+        glUniform1i(loc_id, val);
+    }
 
     void set_uniform_texture(Texture2D &texture, const char *val_name) {
         texture.bind();

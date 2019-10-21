@@ -16,7 +16,7 @@
 
 class Mesh2Volume : public Window {
 private:
-    int layerN = 20;
+    int layerN = 30;
     VertexArrayObject vao;
     FrameBufferObject fbo;
     Shader mesh_shader;
@@ -95,7 +95,7 @@ public:
         {
             glm::mat4 normMat = glm::inverse(glm::transpose(mvMat()));
             normMat = mvMat();
-            for (int i = 1; i <= layerN; i++) {
+            for (int i = 1; i < layerN; i++) {
                 fbo.attachColorTexture(colorImages, i);
                 fbo.attachDepthTexture(LayeredDepthImages, i);
                 depthPeeling_shader.set_uniform_value(normMat, "u_normMat");
