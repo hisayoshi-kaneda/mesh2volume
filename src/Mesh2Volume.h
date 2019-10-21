@@ -13,6 +13,7 @@
 #include "Volume.h"
 #include "Window.h"
 #include "common.h"
+#include "Timer.h"
 
 class Mesh2Volume : public Window {
 private:
@@ -114,6 +115,9 @@ public:
     }
 
     Volume generateVolume() {
+		Timer timer;
+		timer.start();
+
         Volume volume((int)size[0], (int)size[1], (int)size[2], resolution, 0.5f);
         generateLDI();
 
@@ -141,7 +145,7 @@ public:
             volumeGen_shader.set_uniform_value(coordZ, "coordZ");
             volumeGen_shader.set_uniform_value(layerN, "layerN");
             volumeGen_shader.set_uniform_texture(LayeredDepthImages, "LayeredDepthImages");
-            glDrawElements(GL_TRIANGLES, mesh->verIndices.size(), GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
             glReadBuffer(GL_COLOR_ATTACHMENT0);
             glReadPixels(0, 0, size[0], size[1], GL_RED, GL_FLOAT, &volume.data[volume.size[0] * volume.size[1] * z]);
         }
@@ -149,6 +153,8 @@ public:
 
         vao.release();
         fbo.release();
+
+		cout << "Generating volume took " << timer.stop() << " sec" << endl;
 
         return volume;
     }
