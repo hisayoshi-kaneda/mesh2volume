@@ -135,7 +135,8 @@ public:
             float coordZ = orgZ + z * resolution;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             volumeGen_shader.set_uniform_value(mvpMat_, "u_mvpMat");
-            volumeGen_shader.set_uniform_value(glm::vec2(size * resolution), "size");
+            volumeGen_shader.set_uniform_value(glm::vec2(size), "size");
+			volumeGen_shader.set_uniform_value(resolution, "resolution");
             volumeGen_shader.set_uniform_value(center, "center");
             volumeGen_shader.set_uniform_value(coordZ, "coordZ");
             volumeGen_shader.set_uniform_value(layerN, "layerN");

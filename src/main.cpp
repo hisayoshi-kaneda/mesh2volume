@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     //filename = "data/bunny_watertight.stl";
     TriMeshLoader loader;
     TriMesh mesh = loader.load(filename);
-    Mesh2Volume m2v(500,500,500,10.0f/500.0f, &mesh);
+    Mesh2Volume m2v(1024,1024,1024,10.0f/1024.0f, &mesh);
 	//m2v.main_loop();
 	Volume volume = m2v.generateVolume();
 	m2v.~Mesh2Volume();

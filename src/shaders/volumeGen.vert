@@ -6,14 +6,15 @@ out vec4 f_coordinate;
 
 uniform mat4 u_mvpMat;
 uniform vec2 size;
+uniform float resolution;
 uniform vec3 center;
 uniform float coordZ;
 
 vec3 positions[] = vec3[](
-	vec3(-size[0] / 2.0, -size[1] / 2.0, coordZ),
-	vec3(-size[0] / 2.0,  size[1] / 2.0, coordZ),
-	vec3( size[0] / 2.0, -size[1] / 2.0, coordZ),
-	vec3( size[0] / 2.0,  size[1] / 2.0, coordZ)
+	vec3( -size[0] * resolution /2.0, -size[1] * resolution /2.0, coordZ),
+	vec3( -size[0] * resolution / 2.0,  size[1] * resolution / 2.0, coordZ),
+	vec3( size[0] * resolution / 2.0,  -size[1] * resolution /2.0, coordZ),
+	vec3( size[0] * resolution / 2.0,  size[1] * resolution / 2.0, coordZ)
 );
 
 void main(void) {
