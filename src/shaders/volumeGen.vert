@@ -5,9 +5,8 @@ int indices[] = int[]( 0, 1, 3, 0, 3, 2 );
 out vec4 f_coordinate;
 
 uniform mat4 u_mvpMat;
-uniform vec2 size;
+uniform vec3 size;
 uniform float resolution;
-uniform vec3 center;
 uniform float coordZ;
 
 vec3 positions[] = vec3[](
@@ -18,6 +17,6 @@ vec3 positions[] = vec3[](
 );
 
 void main(void) {
-	gl_Position = u_mvpMat * vec4(positions[indices[gl_VertexID]] + center, 1.0);
+	gl_Position = u_mvpMat * vec4(positions[indices[gl_VertexID]], 1.0);
 	f_coordinate = gl_Position;
 }
