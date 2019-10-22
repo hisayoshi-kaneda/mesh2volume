@@ -2,7 +2,7 @@
 
 int indices[] = int[]( 0, 1, 3, 0, 3, 2 );
 
-out vec4 f_coordinate;
+out vec3 f_posWorldSpace;
 
 uniform mat4 u_mvpMat;
 uniform vec3 size;
@@ -18,5 +18,5 @@ vec3 positions[] = vec3[](
 
 void main(void) {
 	gl_Position = u_mvpMat * vec4(positions[indices[gl_VertexID]], 1.0);
-	f_coordinate = gl_Position;
+	f_posWorldSpace = positions[indices[gl_VertexID]];
 }

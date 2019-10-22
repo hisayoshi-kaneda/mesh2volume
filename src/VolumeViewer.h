@@ -39,9 +39,9 @@ public:
 
 		// カメラの初期化
 		projMat = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 1000.0f);
-		viewMat = glm::lookAt(glm::vec3(0.0f, 0.0f, 50.0f),  // 視点の位置
+		viewMat = glm::lookAt(glm::vec3(0.0f, -50.0f, 00.0f),  // 視点の位置
 			glm::vec3(0.0f, 0.0f, 0.0f),  // 見ている先
-			glm::vec3(0.0f, 1.0f, 0.0f)); // 視界の上方向
+			glm::vec3(0.0f, 0.0f, 1.0f)); // 視界の上方向
 
 		//その他の行列の初期化
 		modelMat = glm::mat4(1.0);

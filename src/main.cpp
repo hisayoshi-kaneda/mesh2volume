@@ -24,7 +24,6 @@ int main(int argc, char **argv) {
     TriMeshLoader loader;
     shared_ptr<TriMesh> mesh = make_shared<TriMesh>(loader.load(filename));
     Mesh2Volume m2v(1024, 1024, 1024, 10.0f / 1024.0f, mesh);
-    //m2v.main_loop();
     Volume volume = m2v.generateVolume();
     m2v.~Mesh2Volume();
     VolumeViewer viewer(WINSIZE_WIDTH, WINSIZE_HEIGHT, &volume);
