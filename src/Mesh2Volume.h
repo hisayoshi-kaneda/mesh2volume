@@ -7,13 +7,13 @@
 #include "Shader.h"
 #include "Texture2D.h"
 #include "Texture2DArray.h"
+#include "Timer.h"
 #include "TriMesh.h"
 #include "TriMeshLoader.h"
 #include "VertexArrayObject.h"
 #include "Volume.h"
 #include "Window.h"
 #include "common.h"
-#include "Timer.h"
 
 class Mesh2Volume : public Window {
 private:
@@ -24,9 +24,11 @@ private:
     Shader depthPeeling_shader;
     Shader volumeGen_shader;
     Shader texture_shader;
-    TriMesh *mesh;
+    shared_ptr<TriMesh> mesh;
     Texture2DArray colorImages;
-    Texture2DArray LayeredDepthImages;
+    Texture2DArray LayeredDepthImagesX;
+    Texture2DArray LayeredDepthImagesY;
+    Texture2DArray LayeredDepthImagesZ;
 
     string mesh_vert_file = "src/shaders/mesh_render.vert";
     string mesh_frag_file = "src/shaders/mesh_render.frag";
@@ -40,14 +42,18 @@ private:
     glm::vec3 center;
     glm::vec3 size;
     float resolution;
+    float zFar;
+    float zNear;
 
 public:
-    Mesh2Volume(const int sizeX, const int sizeY, const int sizeZ, float resolution, TriMesh *mesh)
+    Mesh2Volume(const int sizeX, const int sizeY, const int sizeZ, float resolution, shared_ptr<TriMesh> mesh)
         : Window(sizeX, sizeY, "MeshViewer"),
           fbo(sizeX, sizeY),
           mesh(mesh),
           colorImages(sizeX, sizeY, layerN, GL_RGB32F, GL_RGBA),
-          LayeredDepthImages(sizeX, sizeY, layerN, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT),
+          LayeredDepthImagesX(sizeY, sizeZ, layerN, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_TEXTURE0),
+          LayeredDepthImagesY(sizeZ, sizeX, layerN, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_TEXTURE1),
+          LayeredDepthImagesZ(sizeX, sizeY, layerN, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_TEXTURE2),
           size{sizeX, sizeY, sizeZ},
           resolution(resolution) {
         initialize();
@@ -62,30 +68,29 @@ public:
         texture_shader.create(texture_vert_file, texture_frag_file);
         depthPeeling_shader.create(depthPeeling_vert_file, depthPeeling_frag_file);
         volumeGen_shader.create(volumeGen_vert_file, volumeGen_frag_file);
-        mesh->computeGravity();
-        center = mesh->gravity;
-        projMat = glm::ortho(-size[0] * resolution / 2.0f, size[0] * resolution / 2.0f, -size[1] * resolution / 2.0f, size[1] * resolution / 2.0f, 0.1f, 150.0f);
-        //projMat = glm::perspective(glm::radians(5.0f), (float)width / (float)height, 0.1f, 1000.0f);
-
-        viewMat = glm::lookAt(center + glm::vec3(0.0f, 0.0f, 75.0f), center, glm::vec3(0.0f, 1.0f, 0.0f));
+        mesh->computeAABB();
+        center = mesh->centerAABB;
+        zFar = max(size[0], max(size[1], size[2])) * resolution + 10.0f;
+		zNear = 0.1f;
     }
 
-    void main_loop() override {
-        while (!glfwWindowShouldClose(window)) {
-            generateLDI();
-            //generateVolume();
-            flush();
-        }
-    }
+	void draw()override {
+		generateLDI(LayeredDepthImagesZ, glm::vec2(size[0], size[1]), glm::vec3(0.0f, 0.0f, resolution * size[2] / 2.0f + 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		generateVolume();
+	}
 
-    void generateLDI() {
+    void generateLDI(Texture2DArray &LayeredDepthImages, glm::vec2 size, glm::vec3 cameraPos, glm::vec3 upVector) {
+		projMat = glm::ortho(-size[0] * resolution / 2.0f, size[0] * resolution / 2.0f, -size[1] * resolution / 2.0f, size[1] * resolution / 2.0f, zNear, zFar);
+        viewMat = glm::lookAt(cameraPos, glm::vec3(0.0f), upVector);
+		modelMat = glm::translate(-center);
+
         fbo.bind();
         vao.bind();
 
+		glViewport(0.0f,0.0f,int(size.x),int(size.y));
         mesh_shader.bind();
         {
             mesh_shader.set_uniform_value(mvpMat(), "u_mvpMat");
-            fbo.attachColorTexture(colorImages, 0);
             fbo.attachDepthTexture(LayeredDepthImages, 0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glDrawElements(GL_TRIANGLES, mesh->verIndices.size(), GL_UNSIGNED_INT, 0);
@@ -95,7 +100,6 @@ public:
         depthPeeling_shader.bind();
         {
             for (int i = 1; i < layerN; i++) {
-                fbo.attachColorTexture(colorImages, i);
                 fbo.attachDepthTexture(LayeredDepthImages, i);
                 depthPeeling_shader.set_uniform_value(mvMat(), "u_mvMat");
                 depthPeeling_shader.set_uniform_value(mvpMat(), "u_mvpMat");
@@ -112,37 +116,51 @@ public:
         vao.release();
     }
 
-    Volume generateVolume() {
+	Volume generateVolume() {
 		Timer timer;
 		timer.start();
 
-        Volume volume((int)size[0], (int)size[1], (int)size[2], resolution, 0.5f);
-        generateLDI();
+		Volume volume((int)size[0], (int)size[1], (int)size[2], resolution, 0.5f);
+		float cameraPosX = resolution * size[0] / 2.0f + 1.0f;
+		float cameraPosY = resolution * size[1] / 2.0f + 1.0f;
+		generateLDI(LayeredDepthImagesX, glm::vec2(size[1], size[2]), glm::vec3(cameraPosX, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		generateLDI(LayeredDepthImagesY, glm::vec2(size[2], size[0]), glm::vec3(0.0f, cameraPosY, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		generateLDI(LayeredDepthImagesZ, glm::vec2(size[0], size[1]), glm::vec3(0.0f, 0.0f, resolution * size[2] / 2.0f + 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        fbo.bind();
-        vao.bind();
+		projMat = glm::ortho(-size[0] * resolution / 2.0f, size[0] * resolution / 2.0f, -size[1] * resolution / 2.0f, size[1] * resolution / 2.0f, zNear, zFar);
+		viewMat = glm::lookAt(glm::vec3(0.0f, 0.0f, resolution * size[2] / 2.0f + 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelMat = glm::mat4(1.0f);
 
-        Texture2D colorBuffer(size[0], size[1], GL_RGB32F, GL_RGBA);
-        Texture2D depthBuffer(size[0], size[1], GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT);
-        fbo.attachColorTexture(colorBuffer);
-        fbo.attachDepthTexture(depthBuffer);
+		fbo.bind();
+		vao.bind();
 
-        glm::mat4 mvpMat_ = mvpMat();
+		Texture2D colorBuffer(size[0], size[1], GL_R32F, GL_RGBA);
+		Texture2D depthBuffer(size[0], size[1], GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT);
+		fbo.attachColorTexture(colorBuffer);
+		fbo.attachDepthTexture(depthBuffer);
 
-        float orgZ = -(size[2] - 1.0f) / 2.0f * resolution;
+		glm::mat4 mvpMat_ = mvpMat();
 
-        volumeGen_shader.bind();
-        for (int z = 0; z < size[2]; z++) {
+		float orgZ = -(size[2] - 1.0f) / 2.0f * resolution;
+		volumeGen_shader.bind();
+		glViewport(0.0f, 0.0f, int(size[0]), int(size[1]));
+        for (int z = 0; z < int(size[2]); z++) {
             float coordZ = orgZ + z * resolution;
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             volumeGen_shader.set_uniform_value(mvpMat_, "u_mvpMat");
-            volumeGen_shader.set_uniform_value(glm::vec2(size), "size");
-			volumeGen_shader.set_uniform_value(resolution, "resolution");
-            volumeGen_shader.set_uniform_value(center, "center");
+            volumeGen_shader.set_uniform_value(size, "size");
+            volumeGen_shader.set_uniform_value(resolution, "resolution");
             volumeGen_shader.set_uniform_value(coordZ, "coordZ");
+            volumeGen_shader.set_uniform_value(z, "indexZ");
             volumeGen_shader.set_uniform_value(layerN, "layerN");
-            volumeGen_shader.set_uniform_texture(LayeredDepthImages, "LayeredDepthImages");
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+            volumeGen_shader.set_uniform_value(zNear, "zNear");
+            volumeGen_shader.set_uniform_value(zFar, "zFar");
+            volumeGen_shader.set_uniform_value( cameraPosX, "cameraPosX");
+            volumeGen_shader.set_uniform_value( cameraPosY, "cameraPosY");
+            volumeGen_shader.set_uniform_texture(LayeredDepthImagesX, "LayeredDepthImagesX");
+            volumeGen_shader.set_uniform_texture(LayeredDepthImagesY, "LayeredDepthImagesY");
+            volumeGen_shader.set_uniform_texture(LayeredDepthImagesZ, "LayeredDepthImagesZ");
+            glDrawArrays(GL_TRIANGLES, 0, 6);
             glReadBuffer(GL_COLOR_ATTACHMENT0);
             glReadPixels(0, 0, size[0], size[1], GL_RED, GL_FLOAT, &volume.data[volume.size[0] * volume.size[1] * z]);
         }
@@ -151,7 +169,7 @@ public:
         vao.release();
         fbo.release();
 
-		cout << "Generating volume took " << timer.stop() << " sec" << endl;
+        cout << "Generating volume took " << timer.stop() << " sec" << endl;
 
         return volume;
     }
