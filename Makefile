@@ -8,9 +8,9 @@ BUILDDIR		:= build
 BINDIR			:= $(BUILDDIR)/bin
 LIBDIR			:= $(BUILDDIR)/lib
 OBJDIR			:= $(BUILDDIR)/obj
-PROGRAM			:= ./program
+PROGRAM			:= $(BUILDDIR)/program
 
-INCLUDE			:= -I/usr/local/include -I/usr/local/include/eigen3
+INCLUDE			:= -I/usr/local/include
 CXXFLAGS		:= -std=c++17 -Wall -O2 $(INCLUDE) $(SRCDIR)
 LDFLAGS			:= -L/usr/local/lib -lglfw -framework OpenGL -framework CoreVideo -framework IOKit -framework Cocoa
 
