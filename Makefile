@@ -8,7 +8,7 @@ BUILDDIR		:= build
 BINDIR			:= $(BUILDDIR)/bin
 LIBDIR			:= $(BUILDDIR)/lib
 OBJDIR			:= $(BUILDDIR)/obj
-PROGRAM			:= $(BINDIR)/program
+PROGRAM			:= ./program
 
 INCLUDE			:= -I/usr/local/include -I/usr/local/include/eigen3
 CXXFLAGS		:= -std=c++17 -Wall -O2 $(INCLUDE) $(SRCDIR)

@@ -22,12 +22,13 @@ int main(int argc, char **argv) {
     mesh->computeAABB();
     float size[3];
     for (int i = 0; i < 3; i++) {
-	size[i] = mesh->maxPointAABB[i] - mesh->minPointAABB[i];
+        size[i] = mesh->maxPointAABB[i] - mesh->minPointAABB[i];
     }
     float maxLength = max(size[0], max(size[1], size[2]));
     Mesh2Volume m2v(512, 512, 512, maxLength / 512.0f, mesh);
     Volume volume = m2v.generateVolume();
-    m2v.~Mesh2Volume();
     VolumeViewer viewer(WINSIZE_WIDTH, WINSIZE_HEIGHT, &volume);
     viewer.main_loop();
+    string tmp = "volume-512x512x512-" + to_string(maxLength / 512.0f) + ".raw ";
+    volume.write(tmp.c_str());
 }

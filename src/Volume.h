@@ -36,19 +36,11 @@ public:
 
     void compute_threshold();
 
-	void write(const char path[]) {
-		FILE* out = fopen(path, "w+b");
-		fwrite(data, sizeof(float), size[0] * size[1] * size[2], out);
-		fclose(out);
-	}
-
-	void write(string& baseName) {
-		char outpath[1024];
-		sprintf(outpath, "output/%s-%dx%dx%d.raw",baseName, size[0], size[1], size[2]);
-		FILE* out = fopen(outpath, "w+b");
-		fwrite(data, sizeof(float), size[0] * size[1] * size[2], out);
-		fclose(out);
-	}
+    void write(const char path[]) {
+        FILE *out = fopen(path, "w+b");
+        fwrite(data, sizeof(float), size[0] * size[1] * size[2], out);
+        fclose(out);
+    }
 };
 
 #endif // VOLUME_H
