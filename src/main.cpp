@@ -17,17 +17,17 @@ int main(int argc, char **argv) {
         fprintf(stdout, "[ INFO ] input file: %s\n", argv[1]);
         filename = string(argv[1]);
     }
-    //filename = "data/bunny.obj";
-    //filename = "data/lattice-sample2.stl";
-    filename = "data/lattice_fine.stl";
-    //filename = "data/bunny_watertight.stl";
     TriMeshLoader loader;
     shared_ptr<TriMesh> mesh = make_shared<TriMesh>(loader.load(filename));
-    Mesh2Volume m2v(1024, 1024, 1024, 10.0f / 1024.0f, mesh);
+    mesh->computeAABB();
+	float size[3];
+	for (int i = 0; i < 3; i++) {
+		size[i] = mesh->maxPointAABB[i] - mesh->minPointAABB[i];
+	}
+	float maxLength = max(size[0], max(size[1], size[2]));
+    Mesh2Volume m2v(512, 512, 512, maxLength / 512.0f, mesh);
     Volume volume = m2v.generateVolume();
     m2v.~Mesh2Volume();
     VolumeViewer viewer(WINSIZE_WIDTH, WINSIZE_HEIGHT, &volume);
     viewer.main_loop();
-    //string tmp = "lattice";
-    //volume.write(tmp);
 }
