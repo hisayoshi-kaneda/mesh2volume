@@ -20,11 +20,11 @@ int main(int argc, char **argv) {
     TriMeshLoader loader;
     shared_ptr<TriMesh> mesh = make_shared<TriMesh>(loader.load(filename));
     mesh->computeAABB();
-	float size[3];
-	for (int i = 0; i < 3; i++) {
-		size[i] = mesh->maxPointAABB[i] - mesh->minPointAABB[i];
-	}
-	float maxLength = max(size[0], max(size[1], size[2]));
+    float size[3];
+    for (int i = 0; i < 3; i++) {
+	size[i] = mesh->maxPointAABB[i] - mesh->minPointAABB[i];
+    }
+    float maxLength = max(size[0], max(size[1], size[2]));
     Mesh2Volume m2v(512, 512, 512, maxLength / 512.0f, mesh);
     Volume volume = m2v.generateVolume();
     m2v.~Mesh2Volume();
